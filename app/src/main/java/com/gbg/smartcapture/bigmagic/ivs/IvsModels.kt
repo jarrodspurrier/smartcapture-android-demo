@@ -13,7 +13,8 @@ data class CreateSessionRequest(
     val returnUrl: String = "gbgdemo://result",
     val faceMatchEnabled: Boolean = false,
     val sensorType: String = "Mobile",
-    val referenceId: String? = null
+    val referenceId: String? = null,
+    val sdkVersion: String? = null
 )
 
 @JsonClass(generateAdapter = true)
@@ -30,7 +31,8 @@ data class CreateSessionResponse(
 @JsonClass(generateAdapter = true)
 data class SubmitImagesRequest(
     val frontImage: String,
-    val backImage: String
+    val backImage: String,
+    val sdkVersion: String? = null
 )
 
 @JsonClass(generateAdapter = true)
@@ -47,11 +49,29 @@ data class SubmitImagesResponse(
 data class SessionStatusResponse(
     val sessionId: String,
     val status: String,
+    val instanceId: String? = null,
     val result: VerificationResult? = null,
     val createdAt: String? = null,
     val completedAt: String? = null
 ) {
     fun statusEnum(): SessionStatus = SessionStatus.fromWire(status)
+
+    /**
+     * Server quirk: a freshly-submitted session briefly reports `status="failed"` with no engine
+     * metadata before the engine completes and the same session transitions to `"completed"` with
+     * a real `instanceId`/`completedAt`/`result`. Treat the empty variant as still pending so the
+     * poll loop keeps trying instead of bailing to Terminal on the transient value.
+     */
+    fun isTerminalNow(): Boolean {
+        val s = statusEnum()
+        if (!s.isTerminal()) return false
+        if (s == SessionStatus.Failed &&
+            instanceId == null &&
+            completedAt == null &&
+            result == null
+        ) return false
+        return true
+    }
 }
 
 @JsonClass(generateAdapter = true)
@@ -60,7 +80,7 @@ data class VerificationResult(
     val decision: String? = null,
     val documentVerified: Boolean? = null,
     val documentExpired: Boolean? = null,
-    val attentionNotices: List<String> = emptyList(),
+    val attentionNotices: List<String>? = null,
     val failureReason: String? = null
 )
 
@@ -95,6 +115,8 @@ sealed class IvsError(open val message: String) {
     data class BadRequest(override val message: String) : IvsError(message)
     /** 401 — API key missing or invalid. */
     data class Unauthorized(override val message: String = "Unauthorized") : IvsError(message)
+    /** 403 — session belongs to a different API key owner. */
+    data class Forbidden(override val message: String = "Forbidden") : IvsError(message)
     /** 404 — session ID does not exist. */
     data class SessionNotFound(override val message: String = "Session not found") : IvsError(message)
     /** 409 — submit-once constraint hit; guide: treat as success on retry. */

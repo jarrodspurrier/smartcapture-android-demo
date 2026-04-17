@@ -2,6 +2,7 @@ package com.gbg.smartcapture.bigmagic.ivs
 
 import android.util.Base64
 import android.util.Log
+import com.gbg.smartcapture.bigmagic.BuildConfig
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -47,7 +48,12 @@ class IvsApi(
     // --------------------------- Public API ---------------------------
 
     suspend fun createSession(referenceId: String? = null): IvsResult<CreateSessionResponse> {
-        val body = createReqAdapter.toJson(CreateSessionRequest(referenceId = referenceId))
+        val body = createReqAdapter.toJson(
+            CreateSessionRequest(
+                referenceId = referenceId,
+                sdkVersion = BuildConfig.SMARTCAPTURE_VERSION
+            )
+        )
         val request = authorized(Request.Builder().url(url(IvsConfig.CREATE_SESSION_PATH)))
             ?.post(body.toRequestBody(JSON))
             ?.build()
@@ -70,10 +76,13 @@ class IvsApi(
         frontJpeg: ByteArray,
         backJpeg: ByteArray
     ): IvsResult<SubmitImagesResponse> {
+        Log.d(TAG, "submitImages front=${frontJpeg.size}B head=${hexHead(frontJpeg)} " +
+                "back=${backJpeg.size}B head=${hexHead(backJpeg)}")
         val body = submitReqAdapter.toJson(
             SubmitImagesRequest(
                 frontImage = dataUriFor(frontJpeg),
-                backImage = dataUriFor(backJpeg)
+                backImage = dataUriFor(backJpeg),
+                sdkVersion = BuildConfig.SMARTCAPTURE_VERSION
             )
         )
         val request = authorized(Request.Builder().url(url(IvsConfig.submitImagesPath(sessionId))))
@@ -97,6 +106,7 @@ class IvsApi(
 
         return execute(request) { res ->
             val payload = res.body?.string().orEmpty()
+            Log.d(TAG, "getSession body: $payload")
             statusAdapter.fromJson(payload)
                 ?.let { IvsResult.Success(it) }
                 ?: IvsResult.Failure(IvsError.Unexpected("Malformed status response"))
@@ -119,6 +129,9 @@ class IvsApi(
         val b64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
         return "data:image/jpeg;base64,$b64"
     }
+
+    private fun hexHead(bytes: ByteArray, n: Int = 8): String =
+        bytes.take(n).joinToString(" ") { "%02X".format(it) }
 
     private suspend fun <T> execute(
         request: Request,
@@ -156,10 +169,16 @@ class IvsApi(
         return when (code) {
             400 -> {
                 val lowered = parsedMessage.lowercase()
-                if ("expired" in lowered || "expire" in lowered) IvsError.SessionExpired(parsedMessage)
-                else IvsError.BadRequest(parsedMessage)
+                when {
+                    "already processed" in lowered ||
+                        "already submitted" in lowered -> IvsError.AlreadySubmitted(parsedMessage)
+                    "expired" in lowered ||
+                        "expire" in lowered -> IvsError.SessionExpired(parsedMessage)
+                    else -> IvsError.BadRequest(parsedMessage)
+                }
             }
             401 -> IvsError.Unauthorized(parsedMessage)
+            403 -> IvsError.Forbidden(parsedMessage)
             404 -> IvsError.SessionNotFound(parsedMessage)
             409 -> IvsError.AlreadySubmitted(parsedMessage)
             429 -> IvsError.RateLimited(parsedMessage)

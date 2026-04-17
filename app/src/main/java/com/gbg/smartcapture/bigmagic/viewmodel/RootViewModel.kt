@@ -167,6 +167,24 @@ class RootViewModel(application: Application) : IRootViewModel, AndroidViewModel
         startPolling(repository.retryPolling())
     }
 
+    override fun onRefreshTerminal() {
+        val current = _state.value as? VerificationUiState.Terminal ?: return
+        pollJob?.cancel()
+        setState(VerificationUiState.Polling(1))
+        pollJob = viewModelScope.launch {
+            repository.pollStatusFor(current.response.sessionId).collect { event ->
+                when (event) {
+                    is PollEvent.Attempt -> setState(VerificationUiState.Polling(event.attemptNumber))
+                    is PollEvent.Terminal -> setState(VerificationUiState.Terminal(event.response))
+                    is PollEvent.Exhausted -> setState(
+                        VerificationUiState.PollingExhausted(current.response.sessionId)
+                    )
+                    is PollEvent.Error -> setState(VerificationUiState.Failed(describe(event.error)))
+                }
+            }
+        }
+    }
+
     override fun onReset() {
         pollJob?.cancel()
         pollJob = null
@@ -213,6 +231,7 @@ class RootViewModel(application: Application) : IRootViewModel, AndroidViewModel
         is IvsError.SessionExpired -> "Session expired before we could retry automatically."
         is IvsError.BadRequest -> "Request rejected by IVS: ${error.message}"
         is IvsError.Unauthorized -> "API key was not accepted by IVS."
+        is IvsError.Forbidden -> "This API key doesn't own this session."
         is IvsError.SessionNotFound -> "Session could not be found on IVS."
         is IvsError.AlreadySubmitted -> "IVS reports images were already submitted."
         is IvsError.RateLimited -> "Rate limit hit — wait a moment and try again."

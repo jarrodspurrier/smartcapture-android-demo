@@ -106,12 +106,15 @@ class IvsRepository(
             emit(PollEvent.Attempt(attempt, lastStatus))
             when (val outcome = api.getSession(sessionId)) {
                 is IvsResult.Success -> {
-                    val status = outcome.value.statusEnum()
-                    Log.i(TAG, "poll attempt=$attempt rawStatus=${outcome.value.status} " +
-                            "terminal=${status.isTerminal()}")
+                    val response = outcome.value
+                    val status = response.statusEnum()
+                    val terminal = response.isTerminalNow()
+                    Log.i(TAG, "poll attempt=$attempt rawStatus=${response.status} " +
+                            "terminal=$terminal instanceId=${response.instanceId} " +
+                            "completedAt=${response.completedAt}")
                     lastStatus = status
-                    if (status.isTerminal()) {
-                        emit(PollEvent.Terminal(outcome.value))
+                    if (terminal) {
+                        emit(PollEvent.Terminal(response))
                         return@flow
                     }
                 }

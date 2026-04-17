@@ -45,6 +45,7 @@ class MockedRootViewModel(
     override fun onBackCaptured(jpeg: ByteArray) {}
     override fun onCaptureCancelled() {}
     override fun onPollRetry() {}
+    override fun onRefreshTerminal() {}
     override fun onReset() {}
     override fun onDebugPoll(sessionId: String) {}
     override fun setManualCaptureToggleDelay(option: SettingsManualCaptureToggleDelayType) {}

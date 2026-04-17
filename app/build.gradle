@@ -17,6 +17,10 @@ if (localPropsFile.exists()) {
 def ivsApiKeyValue = localProps.getProperty('ivsApiKey') ?: project.findProperty('ivsApiKey') ?: ''
 def ivsBaseUrlValue = localProps.getProperty('ivsBaseUrl') ?: project.findProperty('ivsBaseUrl') ?: 'https://ditto.gbg.com'
 
+// Single source of truth for the GBG SmartCapture SDK version. Feeds both the Maven coordinates
+// below and BuildConfig.SMARTCAPTURE_VERSION, which IVS request bodies report as sdkVersion.
+def smartcaptureVersion = '1.2.3'
+
 android {
     namespace = 'com.gbg.smartcapture.bigmagic'
 
@@ -28,6 +32,7 @@ android {
         configureEach {
             buildConfigField "String", "IVS_API_KEY_SEED", "\"${ivsApiKeyValue}\""
             buildConfigField "String", "IVS_BASE_URL", "\"${ivsBaseUrlValue}\""
+            buildConfigField "String", "SMARTCAPTURE_VERSION", "\"${smartcaptureVersion}\""
         }
     }
 
@@ -77,8 +82,8 @@ dependencies {
     implementation 'androidx.navigation:navigation-compose:2.7.7'
 
     //GBG SmartCapture — only the modules this demo exercises
-    implementation 'com.gbg.smartcapture:commons:1.2.3'
-    implementation 'com.gbg.smartcapture:documentcamera:1.2.3'
+    implementation "com.gbg.smartcapture:commons:${smartcaptureVersion}"
+    implementation "com.gbg.smartcapture:documentcamera:${smartcaptureVersion}"
 
     //Testing/Debugging
     testImplementation 'junit:junit:4.13.2'

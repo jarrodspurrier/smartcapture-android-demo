@@ -37,6 +37,7 @@ import com.gbg.smartcapture.bigmagic.ivs.SessionStatusResponse
 import com.gbg.smartcapture.bigmagic.ivs.VerificationResult
 import com.gbg.smartcapture.commons.compositions.GBGPreviewView
 import com.gbg.smartcapture.commons.compositions.components.PrimaryButton
+import com.gbg.smartcapture.commons.compositions.components.SecondaryButton
 
 private val BrandDeep = Color(0xFF0F2D4A)
 private val BrandMuted = Color(0xFF5B6B7C)
@@ -47,6 +48,7 @@ private val SubtleBg = Color(0xFFF4F6F9)
 fun VerificationResultView(
     response: SessionStatusResponse,
     onDone: () -> Unit,
+    onRefresh: () -> Unit = {},
 ) {
     val status = response.statusEnum()
     val tone = toneFor(status, response.result?.decision)
@@ -84,12 +86,18 @@ fun VerificationResultView(
                     }
                 }
             }
-            if (result != null && result.attentionNotices.isNotEmpty()) {
+            if (result != null && !result.attentionNotices.isNullOrEmpty()) {
                 Spacer(Modifier.size(12.dp))
                 AttentionNotices(result.attentionNotices)
             }
             Spacer(Modifier.size(16.dp))
         }
+        SecondaryButton(
+            text = "Refresh",
+            onSubmit = onRefresh,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Spacer(Modifier.size(8.dp))
         PrimaryButton(
             text = "Done",
             onSubmit = onDone,

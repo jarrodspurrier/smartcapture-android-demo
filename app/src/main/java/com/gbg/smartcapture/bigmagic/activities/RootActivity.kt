@@ -1,6 +1,7 @@
 package com.gbg.smartcapture.bigmagic.activities
 
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
@@ -74,7 +75,14 @@ class RootActivity : ComponentActivity() {
 
         // Initialises the native smart_capture library. Must happen before the first
         // DocumentCameraActivity launch or the native image_analyzer will abort on use.
-        DocumentCameraSDK.init(DocumentCameraSDKConfig(enableLogging = BuildConfig.DEBUG))
+        //
+        // enableLogging=true sets ENABLE_VERBOSE_LOGGING=TRUE in the native engine, which makes
+        // nativeImageQualityResult try to fopen `files/smart-capture/log/<uuid>/document-
+        // processing-log-<ts>/log.json` per frame. The native code doesn't mkdir the per-capture
+        // subdir before fopen("w"), so the first frame errors with ENOENT and the whole capture
+        // returns DocumentProcessingState.Failure(message="", cause=null). Keep logging off until
+        // the SDK ships a fix; support can still ask for a targeted re-enable.
+        DocumentCameraSDK.init(DocumentCameraSDKConfig(enableLogging = false))
 
         setContent {
             SmartCaptureUiTheme {
@@ -204,7 +212,11 @@ class RootActivity : ComponentActivity() {
         }
         val bytes = success.image.image
         val currentState = viewModel.verificationState.value
-        Log.i(TAG, "handleCaptureSuccess state=${currentState::class.simpleName} bytes=${bytes.size}")
+        val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts)
+        Log.i(TAG, "handleCaptureSuccess state=${currentState::class.simpleName} " +
+                "bytes=${bytes.size} dims=${opts.outWidth}x${opts.outHeight} mime=${opts.outMimeType}")
+
         when (currentState) {
             is VerificationUiState.AwaitingFront -> viewModel.onFrontCaptured(bytes)
             is VerificationUiState.AwaitingBack -> viewModel.onBackCaptured(bytes)
@@ -254,7 +266,10 @@ class RootActivity : ComponentActivity() {
                         viewModel = viewModel,
                         onCheckedChange = ::settingsChecked,
                         onManualCaptureToggleDelayChange = ::onManualCaptureToggleDelayChange,
-                        onDebugPoll = viewModel::onDebugPoll,
+                        onDebugPoll = { id ->
+                            viewModel.onDebugPoll(id)
+                            navController.popBackStack()
+                        },
                     )
                 }
             }
@@ -287,6 +302,7 @@ class RootActivity : ComponentActivity() {
             is VerificationUiState.Terminal -> VerificationResultView(
                 response = state.response,
                 onDone = viewModel::onReset,
+                onRefresh = viewModel::onRefreshTerminal,
             )
             is VerificationUiState.Failed -> FailedView(
                 reason = state.reason,

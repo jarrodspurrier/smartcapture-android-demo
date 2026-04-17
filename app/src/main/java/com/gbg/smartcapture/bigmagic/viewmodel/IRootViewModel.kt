@@ -33,6 +33,7 @@ interface IRootViewModel {
     fun onBackCaptured(jpeg: ByteArray)
     fun onCaptureCancelled()
     fun onPollRetry()
+    fun onRefreshTerminal()
     fun onReset()
 
     /** Debug-only: poll a known session id without running capture/submit. */
