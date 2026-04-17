@@ -60,14 +60,14 @@ fun SettingSwitchRow(
 private fun Preview() {
     GBGPreviewView {
         SettingSwitchRow(
-            SettingsSwitch.ENABLE_SCREENSHOTS,
+            SettingsSwitch.MANUAL_CAPTURE_TOGGLE,
             true,
             onCheckedChange = { _, _ ->
 
             }
         )
         SettingSwitchRow(
-            SettingsSwitch.ENABLE_SCREENSHOTS,
+            SettingsSwitch.MANUAL_CAPTURE_TOGGLE,
             false,
             onCheckedChange = { _, _ ->
 

@@ -3,11 +3,19 @@ plugins {
     id 'org.jetbrains.kotlin.android'
     id 'kotlin-parcelize'
     id 'org.jetbrains.kotlin.plugin.compose'
-
-
 }
 
 apply from: '../gradle/build-common-config.gradle'
+
+// Load local.properties for IVS config (keys, optional base URL override).
+// Gradle does not expose local.properties via findProperty() — load manually.
+def localProps = new Properties()
+def localPropsFile = rootProject.file('local.properties')
+if (localPropsFile.exists()) {
+    localPropsFile.withInputStream { localProps.load(it) }
+}
+def ivsApiKeyValue = localProps.getProperty('ivsApiKey') ?: project.findProperty('ivsApiKey') ?: ''
+def ivsBaseUrlValue = localProps.getProperty('ivsBaseUrl') ?: project.findProperty('ivsBaseUrl') ?: 'https://ditto.gbg.com'
 
 android {
     namespace = 'com.gbg.smartcapture.bigmagic'
@@ -16,6 +24,12 @@ android {
         applicationId = "com.gbg.smartcapture.bigmagic"
     }
 
+    buildTypes {
+        configureEach {
+            buildConfigField "String", "IVS_API_KEY_SEED", "\"${ivsApiKeyValue}\""
+            buildConfigField "String", "IVS_BASE_URL", "\"${ivsBaseUrlValue}\""
+        }
+    }
 
     buildFeatures {
         compose = true
@@ -41,7 +55,16 @@ dependencies {
 
     implementation 'androidx.datastore:datastore-preferences:1.2.0'
     implementation 'androidx.datastore:datastore-preferences-core:1.2.0'
+
+    //JSON — reflection-based Kotlin support (codegen needs kapt, which is incompatible with Kotlin 2.2)
     implementation 'com.squareup.moshi:moshi-kotlin:1.15.2'
+
+    //HTTP
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.12.0'
+
+    //Keystore-backed storage for IVS API key
+    implementation 'androidx.security:security-crypto:1.1.0-alpha06'
 
     //Compose
     implementation platform('androidx.compose:compose-bom:2023.03.00')
@@ -53,20 +76,9 @@ dependencies {
     implementation 'androidx.compose.runtime:runtime-livedata'
     implementation 'androidx.navigation:navigation-compose:2.7.7'
 
-    // MJCS
-    implementation 'com.gbg.smartcapture:mjcs:1.2.3'
-    implementation 'com.idscan.bento:logger:0.4'
-
-    //GBG Dependencies
+    //GBG SmartCapture — only the modules this demo exercises
     implementation 'com.gbg.smartcapture:commons:1.2.3'
-    implementation 'com.gbg.smartcapture:facecamera:1.2.3'
     implementation 'com.gbg.smartcapture:documentcamera:1.2.3'
-    implementation 'com.gbg.smartcapture:ozone:1.2.3'
-    implementation 'com.gbg.smartcapture:ozoneui:1.2.3'
-
-    //Innovolar
-    implementation 'com.readid:readid-ui-nfc:4.120.0'
-    implementation 'nl.innovalor.nfcjmrtd:iddoc-connector:4.120.0'
 
     //Testing/Debugging
     testImplementation 'junit:junit:4.13.2'
@@ -76,5 +88,4 @@ dependencies {
     androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
     debugImplementation 'androidx.compose.ui:ui-tooling'
     debugImplementation 'androidx.compose.ui:ui-test-manifest'
-
 }

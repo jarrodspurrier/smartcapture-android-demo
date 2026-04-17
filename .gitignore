@@ -1,0 +1,48 @@
+# Gradle
+.gradle/
+build/
+**/build/
+out/
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+.navigation/
+captures/
+
+# Local config (contains secrets: ivsApiKey)
+local.properties
+
+# Generated / build outputs
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+*.hprof
+bin/
+gen/
+release/
+
+# NDK
+.cxx/
+.externalNativeBuild/
+
+# Kotlin
+*.kotlin_module
+
+# Keystores (never commit)
+*.jks
+*.keystore
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+*.swp
+*~
