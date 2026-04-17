@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">IVS Document Verification</string>
+    <string name="app_name">GBG Eval App</string>
 
     <!-- Settings screen -->
     <string name="settings_screen_title">Settings</string>

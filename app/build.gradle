@@ -28,6 +28,11 @@ android {
         applicationId = "com.gbg.smartcapture.bigmagic"
     }
 
+    // Output APKs as gbg-eval-app-<variant>.apk instead of app-<variant>.apk.
+    base {
+        archivesName = 'gbg-eval-app'
+    }
+
     buildTypes {
         configureEach {
             buildConfigField "String", "IVS_API_KEY_SEED", "\"${ivsApiKeyValue}\""

@@ -142,3 +142,34 @@
 -dontwarn java.awt.image.ColorModel
 -dontwarn java.awt.image.ImageObserver
 -dontwarn java.awt.image.ImageProducer
+
+#################
+# Tink (AndroidX Security / EncryptedSharedPreferences)
+#################
+-dontwarn com.google.errorprone.annotations.**
+
+#################
+# Moshi (reflection-based adapter — codegen disabled, see CLAUDE.md)
+#################
+# Keep JsonClass-annotated models and their constructors/fields for reflection.
+-keepclasseswithmembers @com.squareup.moshi.JsonClass class * { <init>(...); }
+-keepclassmembers @com.squareup.moshi.JsonClass class * { <fields>; <init>(...); }
+-keep @com.squareup.moshi.JsonClass class *
+
+# Belt-and-braces: keep the whole IVS model package since all DTOs live there.
+-keep class com.gbg.smartcapture.bigmagic.ivs.** { *; }
+-keepclassmembers class com.gbg.smartcapture.bigmagic.ivs.** { *; }
+
+# Kotlin metadata is required by Moshi's KotlinJsonAdapterFactory.
+-keep class kotlin.Metadata { *; }
+-keep class kotlin.reflect.** { *; }
+-keepclassmembers class kotlin.Metadata { <methods>; }
+-dontwarn kotlin.reflect.jvm.internal.**
+
+# Moshi internals.
+-keep class com.squareup.moshi.** { *; }
+-keep interface com.squareup.moshi.** { *; }
+-keepclassmembers class * {
+    @com.squareup.moshi.FromJson *;
+    @com.squareup.moshi.ToJson *;
+}
