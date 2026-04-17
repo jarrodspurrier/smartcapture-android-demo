@@ -67,6 +67,7 @@ class RootViewModel(application: Application) : IRootViewModel, AndroidViewModel
     override val settings: SettingsGroup = SettingsGroup(
         manualCaptureToggle = switchFlow(SettingsSwitch.MANUAL_CAPTURE_TOGGLE),
         showCapturePreview = switchFlow(SettingsSwitch.SHOW_CAPTURE_PREVIEW),
+        saveRawImagesToGallery = switchFlow(SettingsSwitch.SAVE_RAW_IMAGES_TO_GALLERY),
     )
 
     private var pollJob: Job? = null

@@ -6,6 +6,7 @@
     <string name="settings_manual_capture_toggle">Manual Capture Toggle</string>
     <string name="settings_manual_capture_toggle_delay">Manual Capture Toggle Delay</string>
     <string name="settings_show_capture_preview">Show capture preview (debug)</string>
+    <string name="settings_save_raw_images_to_gallery">Save raw captures to gallery (debug)</string>
     <string name="setting_manual_capture_toggle_delay_always_on">Always On</string>
     <string name="setting_manual_capture_toggle_delay_5_seconds">5 Seconds</string>
     <string name="setting_manual_capture_toggle_delay_10_seconds">10 Seconds</string>

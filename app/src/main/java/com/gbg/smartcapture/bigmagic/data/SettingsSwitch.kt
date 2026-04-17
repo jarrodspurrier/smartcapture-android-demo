@@ -12,4 +12,5 @@ enum class SettingsSwitch(
 ) {
     MANUAL_CAPTURE_TOGGLE(R.string.settings_manual_capture_toggle, true),
     SHOW_CAPTURE_PREVIEW(R.string.settings_show_capture_preview, false),
+    SAVE_RAW_IMAGES_TO_GALLERY(R.string.settings_save_raw_images_to_gallery, false),
 }

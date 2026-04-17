@@ -37,6 +37,7 @@ class MockedRootViewModel(
     override val settings: SettingsGroup = SettingsGroup(
         manualCaptureToggle = MutableStateFlow(true).asStateFlow(),
         showCapturePreview = MutableStateFlow(false).asStateFlow(),
+        saveRawImagesToGallery = MutableStateFlow(false).asStateFlow(),
     )
 
     override fun onStart() {}

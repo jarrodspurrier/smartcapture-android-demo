@@ -46,6 +46,7 @@ import com.gbg.smartcapture.bigmagic.compositions.bits.BannerAction
 import com.gbg.smartcapture.bigmagic.compositions.bits.EnterpriseBanner
 import com.gbg.smartcapture.bigmagic.data.SettingsManualCaptureToggleDelayType
 import com.gbg.smartcapture.bigmagic.data.SettingsSwitch
+import com.gbg.smartcapture.bigmagic.util.saveJpegToGallery
 import com.gbg.smartcapture.bigmagic.viewmodel.IRootViewModel
 import com.gbg.smartcapture.bigmagic.viewmodel.RootViewModel
 import com.gbg.smartcapture.bigmagic.viewmodel.VerificationUiState
@@ -217,11 +218,25 @@ class RootActivity : ComponentActivity() {
         Log.i(TAG, "handleCaptureSuccess state=${currentState::class.simpleName} " +
                 "bytes=${bytes.size} dims=${opts.outWidth}x${opts.outHeight} mime=${opts.outMimeType}")
 
+        maybeSaveRawCaptureToGallery(bytes, currentState)
+
         when (currentState) {
             is VerificationUiState.AwaitingFront -> viewModel.onFrontCaptured(bytes)
             is VerificationUiState.AwaitingBack -> viewModel.onBackCaptured(bytes)
             else -> Log.w(TAG, "Capture returned but state is $currentState")
         }
+    }
+
+    private fun maybeSaveRawCaptureToGallery(bytes: ByteArray, state: VerificationUiState) {
+        if (!BuildConfig.DEBUG) return
+        if (!viewModel.settings.saveRawImagesToGallery.value) return
+        val side = when (state) {
+            is VerificationUiState.AwaitingFront -> "front"
+            is VerificationUiState.AwaitingBack -> "back"
+            else -> "unknown"
+        }
+        val filename = "smartcapture_${side}_${System.currentTimeMillis()}.jpg"
+        lifecycleScope.launch { saveJpegToGallery(applicationContext, bytes, filename) }
     }
 
     // --------------------- Compose root ---------------------

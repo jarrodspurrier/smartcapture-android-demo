@@ -59,6 +59,7 @@ fun SettingsView(
 ) {
     val manualCapture = viewModel.settings.manualCaptureToggle.collectAsStateWithLifecycle()
     val showCapturePreview = viewModel.settings.showCapturePreview.collectAsStateWithLifecycle()
+    val saveRawImagesToGallery = viewModel.settings.saveRawImagesToGallery.collectAsStateWithLifecycle()
     val delaySelected = viewModel.manualCaptureToggleDelayState.collectAsStateWithLifecycle()
     val hasApiKey = viewModel.hasApiKey.collectAsStateWithLifecycle()
     val lastSessionId = viewModel.lastSessionId.collectAsStateWithLifecycle()
@@ -108,6 +109,14 @@ fun SettingsView(
             Spacer(Modifier.size(24.dp))
             SectionLabel("Debug")
             Spacer(Modifier.size(8.dp))
+            SettingsGroup {
+                SettingSwitchRow(
+                    settingsSwitch = SettingsSwitch.SAVE_RAW_IMAGES_TO_GALLERY,
+                    checked = saveRawImagesToGallery.value,
+                    onCheckedChange = onCheckedChange,
+                )
+            }
+            Spacer(Modifier.size(12.dp))
             DebugPollPanel(
                 initialSessionId = lastSessionId.value.orEmpty(),
                 onDebugPoll = onDebugPoll,
