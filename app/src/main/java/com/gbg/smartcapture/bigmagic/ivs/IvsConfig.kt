@@ -9,6 +9,6 @@ object IvsConfig {
     fun submitImagesPath(sessionId: String) = "/api/verification/sessions/$sessionId/images"
     fun getSessionPath(sessionId: String) = "/api/verification/sessions/$sessionId"
 
-    const val POLL_INTERVAL_MS: Long = 4_000L
+    const val POLL_INTERVAL_MS: Long = 2_000L
     const val POLL_MAX_ATTEMPTS: Int = 10
 }

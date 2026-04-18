@@ -56,7 +56,7 @@ fun PollingView(attempt: Int) {
         )
         Spacer(Modifier.size(8.dp))
         Text(
-            text = "Usually takes 10–20 seconds. Hang tight.",
+            text = "Hang tight.",
             fontSize = 14.sp,
             color = BrandMuted,
             textAlign = TextAlign.Center,
@@ -69,12 +69,6 @@ fun PollingView(attempt: Int) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 4.dp),
-        )
-        Spacer(Modifier.size(8.dp))
-        Text(
-            text = "Check $clamped of $total",
-            fontSize = 12.sp,
-            color = BrandMuted,
         )
     }
 }
