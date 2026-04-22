@@ -5,6 +5,8 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.gbg.smartcapture.bigmagic.data.ApiKeyStore
+import com.gbg.smartcapture.bigmagic.data.DeviceInfo
+import com.gbg.smartcapture.bigmagic.data.DeviceInfoCollector
 import com.gbg.smartcapture.bigmagic.data.LastSessionStore
 import com.gbg.smartcapture.bigmagic.data.SettingsDataStore
 import com.gbg.smartcapture.bigmagic.data.SettingsGroup
@@ -192,6 +194,8 @@ class RootViewModel(application: Application) : IRootViewModel, AndroidViewModel
         repository.reset()
         setState(VerificationUiState.Idle)
     }
+
+    override fun getDeviceInfo(): DeviceInfo = DeviceInfoCollector.snapshot(getApplication())
 
     override fun onDebugPoll(sessionId: String) {
         if (sessionId.isBlank()) return

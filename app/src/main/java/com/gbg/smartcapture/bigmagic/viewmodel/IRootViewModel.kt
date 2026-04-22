@@ -1,5 +1,6 @@
 package com.gbg.smartcapture.bigmagic.viewmodel
 
+import com.gbg.smartcapture.bigmagic.data.DeviceInfo
 import com.gbg.smartcapture.bigmagic.data.SettingsGroup
 import com.gbg.smartcapture.bigmagic.data.SettingsManualCaptureToggleDelayType
 import com.gbg.smartcapture.bigmagic.data.SettingsSwitch
@@ -38,6 +39,9 @@ interface IRootViewModel {
 
     /** Debug-only: poll a known session id without running capture/submit. */
     fun onDebugPoll(sessionId: String)
+
+    /** Debug-only: snapshot of device info shown on the Settings screen. */
+    fun getDeviceInfo(): DeviceInfo
 
     // ------------------------ Settings ------------------------
 

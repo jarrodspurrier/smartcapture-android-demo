@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -35,6 +36,7 @@ import com.gbg.smartcapture.bigmagic.BuildConfig
 import com.gbg.smartcapture.bigmagic.R
 import com.gbg.smartcapture.bigmagic.compositions.bits.SettingSwitchRow
 import com.gbg.smartcapture.bigmagic.compositions.bits.TitledDropdown
+import com.gbg.smartcapture.bigmagic.data.DeviceInfo
 import com.gbg.smartcapture.bigmagic.data.SettingsManualCaptureToggleDelayType
 import com.gbg.smartcapture.bigmagic.data.SettingsSwitch
 import com.gbg.smartcapture.bigmagic.viewmodel.IRootViewModel
@@ -107,6 +109,12 @@ fun SettingsView(
 
         if (BuildConfig.DEBUG) {
             Spacer(Modifier.size(24.dp))
+            SectionLabel("Device")
+            Spacer(Modifier.size(8.dp))
+            val deviceInfo = remember { viewModel.getDeviceInfo() }
+            DeviceInfoCard(info = deviceInfo)
+
+            Spacer(Modifier.size(24.dp))
             SectionLabel("Debug")
             Spacer(Modifier.size(8.dp))
             SettingsGroup {
@@ -159,6 +167,48 @@ private fun DebugPollPanel(
         SecondaryButton(
             text = "Poll",
             onSubmit = { onDebugPoll(sessionId.trim()) },
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+@Composable
+private fun DeviceInfoCard(info: DeviceInfo) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color.White)
+            .border(1.dp, CardBorder, RoundedCornerShape(12.dp))
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        DeviceInfoRow(label = "Device ID", value = info.deviceId)
+        DeviceInfoRow(label = "Manufacturer", value = info.manufacturer)
+        DeviceInfoRow(label = "Model", value = info.model)
+        DeviceInfoRow(label = "OS version", value = info.osVersion)
+        DeviceInfoRow(label = "Timezone", value = info.timezone)
+        DeviceInfoRow(label = "Network", value = info.network)
+    }
+}
+
+@Composable
+private fun DeviceInfoRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            fontSize = 13.sp,
+            color = BrandMuted,
+            modifier = Modifier.padding(end = 12.dp),
+        )
+        Text(
+            text = value.ifBlank { "—" },
+            fontSize = 13.sp,
+            color = BrandDeep,
+            fontFamily = FontFamily.Monospace,
             modifier = Modifier.fillMaxWidth(),
         )
     }

@@ -1,5 +1,6 @@
 package com.gbg.smartcapture.bigmagic.viewmodel
 
+import com.gbg.smartcapture.bigmagic.data.DeviceInfo
 import com.gbg.smartcapture.bigmagic.data.SettingsGroup
 import com.gbg.smartcapture.bigmagic.data.SettingsManualCaptureToggleDelayType
 import com.gbg.smartcapture.bigmagic.data.SettingsSwitch
@@ -51,4 +52,13 @@ class MockedRootViewModel(
     override fun onDebugPoll(sessionId: String) {}
     override fun setManualCaptureToggleDelay(option: SettingsManualCaptureToggleDelayType) {}
     override fun setSettingSwitch(switch: SettingsSwitch, value: Boolean) {}
+
+    override fun getDeviceInfo(): DeviceInfo = DeviceInfo(
+        deviceId = "a1b2c3d4e5f60718",
+        manufacturer = "Preview",
+        model = "Preview Device",
+        osVersion = "Android 13 (API 33)",
+        timezone = "America/Chicago",
+        network = "WiFi",
+    )
 }
