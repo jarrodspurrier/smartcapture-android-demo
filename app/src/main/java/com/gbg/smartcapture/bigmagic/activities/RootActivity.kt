@@ -54,8 +54,6 @@ import com.gbg.smartcapture.commons.gbgGetInsetPadding
 import com.gbg.smartcapture.commons.theme.SmartCaptureUiTheme
 import com.gbg.smartcapture.documentcamera.AutoCaptureToggleConfig
 import com.gbg.smartcapture.documentcamera.DocumentCameraActivity
-import com.gbg.smartcapture.documentcamera.DocumentCameraSDK
-import com.gbg.smartcapture.documentcamera.DocumentCameraSDKConfig
 import com.gbg.smartcapture.documentcamera.DocumentProcessingState
 import com.gbg.smartcapture.documentcamera.DocumentScannerConfig
 import com.gbg.smartcapture.documentcamera.DocumentSide
@@ -73,17 +71,6 @@ class RootActivity : ComponentActivity() {
             navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
         )
         super.onCreate(savedInstanceState)
-
-        // Initialises the native smart_capture library. Must happen before the first
-        // DocumentCameraActivity launch or the native image_analyzer will abort on use.
-        //
-        // enableLogging=true sets ENABLE_VERBOSE_LOGGING=TRUE in the native engine, which makes
-        // nativeImageQualityResult try to fopen `files/smart-capture/log/<uuid>/document-
-        // processing-log-<ts>/log.json` per frame. The native code doesn't mkdir the per-capture
-        // subdir before fopen("w"), so the first frame errors with ENOENT and the whole capture
-        // returns DocumentProcessingState.Failure(message="", cause=null). Keep logging off until
-        // the SDK ships a fix; support can still ask for a targeted re-enable.
-        DocumentCameraSDK.init(DocumentCameraSDKConfig(enableLogging = false))
 
         setContent {
             SmartCaptureUiTheme {
@@ -211,7 +198,7 @@ class RootActivity : ComponentActivity() {
             viewModel.onCaptureCancelled()
             return
         }
-        val bytes = success.image.image
+        val bytes = success.bytes
         val currentState = viewModel.verificationState.value
         val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts)

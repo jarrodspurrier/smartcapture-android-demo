@@ -2,6 +2,7 @@ package com.gbg.smartcapture.bigmagic.ivs
 
 import android.util.Log
 import com.gbg.smartcapture.bigmagic.data.ApiKeyStore
+import com.gbg.smartcapture.bigmagic.data.DeviceInfoPayload
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.flow
  */
 class IvsRepository(
     apiKeyStore: ApiKeyStore,
+    private val deviceInfoProvider: () -> DeviceInfoPayload? = { null },
     private val api: IvsApi = IvsApi(apiKeyProvider = { apiKeyStore.getOrSeedApiKey() })
 ) {
 
@@ -25,7 +27,7 @@ class IvsRepository(
 
     /** Step 1 — create a session. Stores the id for subsequent calls. */
     suspend fun startSession(referenceId: String? = null): IvsResult<String> {
-        val outcome = api.createSession(referenceId)
+        val outcome = api.createSession(deviceInfoProvider(), referenceId)
         if (outcome is IvsResult.Success) {
             activeSessionId = outcome.value.sessionId
             return IvsResult.Success(outcome.value.sessionId)

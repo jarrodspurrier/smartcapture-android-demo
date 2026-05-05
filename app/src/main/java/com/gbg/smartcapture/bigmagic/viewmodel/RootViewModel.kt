@@ -38,7 +38,12 @@ class RootViewModel(application: Application) : IRootViewModel, AndroidViewModel
     private val settingStore = SettingsDataStore(getApplication())
     private val apiKeyStore = ApiKeyStore(getApplication())
     private val lastSessionStore = LastSessionStore(getApplication())
-    private val repository = IvsRepository(apiKeyStore)
+    private val repository = IvsRepository(
+        apiKeyStore = apiKeyStore,
+        deviceInfoProvider = {
+            DeviceInfoCollector.payload(getApplication(), apiKeyStore.getOrSeedApiKey())
+        },
+    )
 
     private val _lastSessionId = MutableStateFlow(lastSessionStore.lastSessionId)
     override val lastSessionId: StateFlow<String?> = _lastSessionId.asStateFlow()

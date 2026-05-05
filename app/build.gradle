@@ -19,7 +19,7 @@ def ivsBaseUrlValue = localProps.getProperty('ivsBaseUrl') ?: project.findProper
 
 // Single source of truth for the GBG SmartCapture SDK version. Feeds both the Maven coordinates
 // below and BuildConfig.SMARTCAPTURE_VERSION, which IVS request bodies report as sdkVersion.
-def smartcaptureVersion = '1.2.3'
+def smartcaptureVersion = '1.3.0'
 
 android {
     namespace = 'com.gbg.smartcapture.bigmagic'

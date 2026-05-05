@@ -91,12 +91,11 @@ To add a new setting: add to `SettingsSwitch` (or a new enum), plumb through `Se
 Single `:app` module. `build-common-config.gradle` holds the android block (SDK versions, signing configs, build types including `releaseNoSigning`, lint config, `buildFeatures.buildConfig=true`) and is applied from `app/build.gradle`. Put Android-level config changes there, not in the app module's build file. `compileSdk=36`, `targetSdk=35`, `minSdk=24`, JVM target `1.8`.
 
 ### Versioning
-`deployVersionName` in the root `build.gradle` is a build timestamp; `deployVersionCode` is hardcoded to `1`. The `com.gbg.smartcapture:*` dependency version (currently `1.2.3`) is shown by `VersionNumberView`.
+`deployVersionName` in the root `build.gradle` is a build timestamp; `deployVersionCode` is hardcoded to `1`. The `com.gbg.smartcapture:*` dependency version (currently `1.3.0`) is shown by `VersionNumberView`.
 
 ## Gotchas
 
 - **App namespace is `com.gbg.smartcapture.bigmagic`.** The `bigmagic` segment is historical — don't "fix" it. Package paths on disk follow this.
-- **`DocumentCameraSDK.init(DocumentCameraSDKConfig(...))` must run before any `DocumentCameraActivity` launch** — the native `smart_capture::init()` is invoked here. Called from `RootActivity.onCreate`. Without it, the native image analyzer aborts the process on first frame.
 - **`DocumentCameraActivity.latestResult` is a consume-once getter** — the Kotlin companion getter reads the static field AND sets it to `null` as a side effect. Read it into a local variable *exactly once*; any second access returns `null`. Same applies to `latestMetadata`.
 - **`INTERNET` permission is declared explicitly in `AndroidManifest.xml`.** When MJCS / Face / Ozone were removed, their manifest-merged permissions went with them. Removing this permission will crash OkHttp with a `SecurityException` on DNS lookup (a non-`IOException`, which OkHttp's dispatcher rethrows fatally — not via `Callback.onFailure`).
 - **`local.properties` is read manually in `app/build.gradle`.** Gradle's `findProperty` does not look at `local.properties`.

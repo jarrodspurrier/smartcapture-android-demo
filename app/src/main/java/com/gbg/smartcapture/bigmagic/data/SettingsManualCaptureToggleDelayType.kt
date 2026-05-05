@@ -16,7 +16,7 @@ enum class SettingsManualCaptureToggleDelayType(
     OPTION_ALWAYS_ON(valueMillis = 0, titleResource = R.string.setting_manual_capture_toggle_delay_always_on);
 
     companion object {
-        val DEFAULT_OPTION: SettingsManualCaptureToggleDelayType = OPTION_15_SECONDS
+        val DEFAULT_OPTION: SettingsManualCaptureToggleDelayType = OPTION_ALWAYS_ON
         val DATASTORE_KEY: String = this::class.java.name
         val ALL: List<SettingsManualCaptureToggleDelayType> = entries.toList()
 

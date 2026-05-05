@@ -3,6 +3,7 @@ package com.gbg.smartcapture.bigmagic.ivs
 import android.util.Base64
 import android.util.Log
 import com.gbg.smartcapture.bigmagic.BuildConfig
+import com.gbg.smartcapture.bigmagic.data.DeviceInfoPayload
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -47,11 +48,15 @@ class IvsApi(
 
     // --------------------------- Public API ---------------------------
 
-    suspend fun createSession(referenceId: String? = null): IvsResult<CreateSessionResponse> {
+    suspend fun createSession(
+        deviceInfo: DeviceInfoPayload?,
+        referenceId: String? = null,
+    ): IvsResult<CreateSessionResponse> {
         val body = createReqAdapter.toJson(
             CreateSessionRequest(
                 referenceId = referenceId,
-                sdkVersion = BuildConfig.SMARTCAPTURE_VERSION
+                sdkVersion = BuildConfig.SMARTCAPTURE_VERSION,
+                deviceInfo = deviceInfo,
             )
         )
         val request = authorized(Request.Builder().url(url(IvsConfig.CREATE_SESSION_PATH)))

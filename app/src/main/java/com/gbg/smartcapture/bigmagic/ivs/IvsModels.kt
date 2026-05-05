@@ -1,5 +1,6 @@
 package com.gbg.smartcapture.bigmagic.ivs
 
+import com.gbg.smartcapture.bigmagic.data.DeviceInfoPayload
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
@@ -14,7 +15,8 @@ data class CreateSessionRequest(
     val faceMatchEnabled: Boolean = false,
     val sensorType: String = "Mobile",
     val referenceId: String? = null,
-    val sdkVersion: String? = null
+    val sdkVersion: String? = null,
+    val deviceInfo: DeviceInfoPayload? = null
 )
 
 @JsonClass(generateAdapter = true)

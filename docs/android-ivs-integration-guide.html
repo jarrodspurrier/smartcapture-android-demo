@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Android ↔ IVS Integration Guide — GBG</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gbg-blue: #0a3d6b;
+    --gbg-blue-dark: #072d50;
+    --gbg-blue-light: #e8f0f8;
+    --gbg-blue-mid: #c0d4ea;
+    --gbg-accent: #0073c8;
+    --text-primary: #1a1a1a;
+    --text-secondary: #4a5568;
+    --text-muted: #718096;
+    --border: #e2e8f0;
+    --border-light: #f0f4f8;
+    --bg: #f7f9fc;
+    --white: #ffffff;
+    --warning-bg: #fffbeb;
+    --warning-border: #f6c90e;
+    --warning-text: #92400e;
+    --success-bg: #f0faf4;
+    --success-border: #34a85a;
+    --error-bg: #fff5f5;
+    --error-border: #e53e3e;
+    --code-bg: #1e2638;
+    --code-text: #e2e8f0;
+    --sidebar-width: 260px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    line-height: 1.6;
+    font-size: 15px;
+    min-height: 100vh;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: var(--sidebar-width);
+    background: #0d1f35;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    overflow-y: auto;
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-logo {
+    padding: 22px 18px 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .sidebar-logo-badge {
+    background: var(--gbg-accent);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 5px 9px;
+    border-radius: 5px;
+    flex-shrink: 0;
+  }
+
+  .sidebar-logo-text { display: flex; flex-direction: column; }
+  .sidebar-logo-text .brand { font-size: 13px; font-weight: 700; color: white; line-height: 1.2; }
+  .sidebar-logo-text .edition { font-size: 10px; color: rgba(255,255,255,0.4); letter-spacing: 0.4px; text-transform: uppercase; margin-top: 2px; }
+
+  .sidebar-nav { padding: 14px 0; flex: 1; }
+
+  .nav-section-label {
+    font-size: 9px; font-weight: 600; color: rgba(255,255,255,0.35);
+    letter-spacing: 1.2px; text-transform: uppercase; padding: 12px 18px 5px;
+  }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 9px;
+    padding: 8px 18px; color: rgba(255,255,255,0.55);
+    text-decoration: none; font-size: 13px; font-weight: 400;
+    transition: all 0.15s; cursor: pointer;
+    border-left: 2px solid transparent;
+  }
+
+  .nav-item:hover { color: white; background: rgba(255,255,255,0.05); }
+  .nav-item.active { color: white; border-left-color: var(--gbg-accent); background: rgba(0,115,200,0.18); }
+  .nav-icon { width: 18px; text-align: center; font-size: 13px; flex-shrink: 0; }
+
+  .sidebar-footer {
+    padding: 14px 18px; border-top: 1px solid rgba(255,255,255,0.08);
+    font-size: 11px; color: rgba(255,255,255,0.28); line-height: 1.5;
+  }
+
+  /* HEADER */
+  .main-wrapper { margin-left: var(--sidebar-width); min-height: 100vh; }
+
+  .site-header {
+    background: var(--gbg-blue); padding: 0 40px;
+    display: flex; align-items: center; height: 64px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+
+  .header-logo { display: flex; align-items: center; gap: 16px; }
+
+  .logo-badge {
+    background: var(--white); border-radius: 4px; padding: 4px 10px;
+    font-size: 13px; font-weight: 700; color: var(--gbg-blue);
+    letter-spacing: 0.05em; text-transform: uppercase;
+  }
+
+  .header-title { color: var(--white); font-size: 17px; font-weight: 600; letter-spacing: 0.01em; }
+  .header-divider { width: 1px; height: 24px; background: rgba(255,255,255,0.3); margin: 0 16px; }
+
+  /* LAYOUT */
+  .page-wrapper { max-width: 900px; margin: 0 auto; padding: 48px 24px 80px; }
+
+  /* HERO */
+  .hero {
+    text-align: center; padding: 40px 0 48px;
+    border-bottom: 1px solid var(--border); margin-bottom: 48px;
+  }
+
+  .hero-label {
+    display: inline-block; background: var(--gbg-blue-light); color: var(--gbg-accent);
+    font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 6px 14px; border-radius: 20px; margin-bottom: 20px;
+  }
+
+  .hero h1 {
+    font-family: 'Source Serif 4', Georgia, serif; font-size: 36px;
+    font-weight: 600; color: var(--text-primary); line-height: 1.2; margin-bottom: 16px;
+  }
+
+  .hero p { font-size: 16px; color: var(--text-secondary); max-width: 600px; margin: 0 auto; }
+
+  /* SECTIONS */
+  .section { margin-bottom: 60px; }
+
+  .section-header {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 24px; padding-bottom: 16px;
+    border-bottom: 2px solid var(--gbg-blue-light);
+  }
+
+  .section-number {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--gbg-blue); color: var(--white);
+    font-size: 15px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+
+  .section-icon {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--gbg-blue-light); color: var(--gbg-blue);
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+
+  .section-header h2 {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 22px; font-weight: 600; color: var(--text-primary);
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 10px; padding: 28px 32px; margin-bottom: 20px;
+  }
+
+  .card p { color: var(--text-secondary); line-height: 1.7; }
+  .card p + p { margin-top: 14px; }
+  .card strong { color: var(--text-primary); font-weight: 600; }
+
+  /* FLOW TABLE (overview) */
+  .flow-table {
+    width: 100%; border-collapse: collapse;
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden; margin-bottom: 20px;
+    font-size: 14px;
+  }
+
+  .flow-table th {
+    background: var(--gbg-blue); color: var(--white);
+    padding: 12px 16px; text-align: left; font-weight: 600;
+    font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase;
+  }
+
+  .flow-table td { padding: 13px 16px; border-top: 1px solid var(--border); vertical-align: top; }
+  .flow-table tr:hover td { background: var(--border-light); }
+
+  .flow-table td:first-child { font-weight: 600; color: var(--text-primary); white-space: nowrap; }
+  .flow-table td:nth-child(2) { color: var(--text-secondary); }
+  .flow-table td:last-child { color: var(--text-muted); }
+
+  .badge {
+    display: inline-block; font-size: 11px; font-weight: 600;
+    padding: 2px 8px; border-radius: 4px; letter-spacing: 0.03em;
+  }
+
+  .badge-new { background: #fef3c7; color: #92400e; }
+  .badge-reuse { background: var(--gbg-blue-light); color: var(--gbg-blue); }
+  .badge-sdk { background: #f0fdf4; color: #166534; }
+
+  /* ENDPOINT BLOCK */
+  .endpoint-block {
+    background: var(--code-bg); border-radius: 10px;
+    padding: 20px 24px; margin-bottom: 16px; font-family: 'JetBrains Mono', monospace;
+  }
+
+  .endpoint-method {
+    display: inline-block; font-size: 12px; font-weight: 700;
+    padding: 3px 8px; border-radius: 4px; margin-right: 10px;
+    letter-spacing: 0.05em;
+  }
+
+  .method-post { background: #065f46; color: #6ee7b7; }
+  .method-get { background: #1e3a5f; color: #93c5fd; }
+
+  .endpoint-path { color: #e2e8f0; font-size: 15px; font-weight: 500; }
+  .endpoint-auth { color: rgba(255,255,255,0.4); font-size: 12px; margin-top: 6px; }
+
+  /* CODE BLOCKS */
+  .code-block {
+    background: var(--code-bg); color: var(--code-text);
+    border-radius: 8px; padding: 18px 20px; margin: 12px 0 16px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    line-height: 1.65; overflow-x: auto;
+  }
+
+  .code-label {
+    font-size: 11px; font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;
+  }
+
+  .json-key { color: #93c5fd; }
+  .json-str { color: #86efac; }
+  .json-num { color: #fbbf24; }
+  .json-bool { color: #f87171; }
+  .json-null { color: #94a3b8; }
+  .json-comment { color: #64748b; font-style: italic; }
+
+  /* FIELD TABLE */
+  .field-table {
+    width: 100%; border-collapse: collapse; font-size: 14px;
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden; margin-bottom: 20px;
+  }
+
+  .field-table th {
+    background: var(--border-light); color: var(--text-secondary);
+    padding: 10px 14px; text-align: left; font-weight: 600;
+    font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .field-table td { padding: 11px 14px; border-top: 1px solid var(--border); vertical-align: top; }
+  .field-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--gbg-accent); font-weight: 500; white-space: nowrap; }
+  .field-table td:nth-child(2) { color: var(--text-muted); font-size: 13px; }
+  .field-table td:last-child { color: var(--text-secondary); font-size: 13px; line-height: 1.6; }
+
+  /* ERROR TABLE */
+  .error-table {
+    width: 100%; border-collapse: collapse; font-size: 14px;
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden; margin-bottom: 20px;
+  }
+
+  .error-table th {
+    background: var(--gbg-blue); color: var(--white);
+    padding: 10px 14px; text-align: left; font-weight: 600;
+    font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+
+  .error-table td { padding: 11px 14px; border-top: 1px solid var(--border); vertical-align: top; font-size: 13px; }
+  .error-table td:first-child { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #c53030; white-space: nowrap; }
+  .error-table td:nth-child(2) { color: var(--text-primary); font-weight: 500; }
+  .error-table td:last-child { color: var(--text-secondary); }
+
+  /* STATUS TABLE */
+  .status-table {
+    width: 100%; border-collapse: collapse; font-size: 14px;
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden; margin-bottom: 20px;
+  }
+
+  .status-table th {
+    background: var(--border-light); color: var(--text-secondary);
+    padding: 10px 14px; text-align: left; font-weight: 600;
+    font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .status-table td { padding: 11px 14px; border-top: 1px solid var(--border); vertical-align: top; font-size: 13px; }
+  .status-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--gbg-accent); white-space: nowrap; }
+  .status-table td:nth-child(2) { color: var(--text-secondary); }
+  .status-table td:last-child { color: var(--text-muted); }
+
+  /* NOTICES */
+  .notice {
+    background: var(--warning-bg); border: 1px solid var(--warning-border);
+    border-left: 4px solid var(--warning-border); border-radius: 8px;
+    padding: 18px 22px; margin-bottom: 20px;
+  }
+
+  .notice-title {
+    font-weight: 600; color: var(--warning-text); font-size: 13px;
+    letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 8px;
+  }
+
+  .notice p { color: var(--warning-text); font-size: 14px; line-height: 1.65; }
+
+  .info-box {
+    background: var(--gbg-blue-light); border: 1px solid var(--gbg-blue-mid);
+    border-left: 4px solid var(--gbg-accent); border-radius: 8px;
+    padding: 18px 22px; margin-bottom: 20px;
+  }
+
+  .info-box p { color: var(--gbg-blue-dark); font-size: 14px; line-height: 1.65; }
+  .info-box strong { color: var(--gbg-blue-dark); }
+
+  /* POLLING PATTERN */
+  .poll-pattern {
+    display: grid; grid-template-columns: 48px 1fr;
+    gap: 0 16px; margin-bottom: 8px; position: relative;
+  }
+
+  .poll-pattern:not(:last-child) .poll-connector {
+    position: absolute; left: 23px; top: 48px; bottom: -8px;
+    width: 2px; background: var(--gbg-blue-mid);
+  }
+
+  .poll-dot {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: var(--gbg-blue); color: var(--white);
+    font-size: 18px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 2px;
+    box-shadow: 0 2px 8px rgba(10,61,107,0.25);
+    z-index: 1; position: relative;
+  }
+
+  .poll-body { padding-bottom: 28px; }
+  .poll-body h3 { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; margin-top: 12px; }
+  .poll-body p { color: var(--text-secondary); font-size: 14px; line-height: 1.7; }
+
+  /* SEQUENCE DIAGRAM */
+  .sequence-diagram {
+    background: var(--code-bg); border-radius: 10px;
+    padding: 28px 32px; margin-bottom: 20px; overflow-x: auto;
+  }
+
+  .sequence-diagram pre {
+    font-family: 'JetBrains Mono', monospace; font-size: 12.5px;
+    color: #94a3b8; line-height: 1.8; white-space: pre;
+  }
+
+  .seq-app { color: #93c5fd; }
+  .seq-ivs { color: #86efac; }
+  .seq-engine { color: #fbbf24; }
+  .seq-arrow { color: #64748b; }
+  .seq-label { color: #e2e8f0; }
+  .seq-comment { color: #475569; font-style: italic; }
+
+  /* CONSTRAINTS LIST */
+  .constraints-list { list-style: none; padding: 0; margin: 0; }
+  .constraints-list li {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+    font-size: 14px; color: var(--text-secondary); line-height: 1.6;
+  }
+  .constraints-list li:last-child { border-bottom: none; }
+  .constraints-list li::before {
+    content: "◆"; color: var(--gbg-accent); font-size: 10px;
+    flex-shrink: 0; margin-top: 4px;
+  }
+  .constraints-list strong { color: var(--text-primary); }
+
+  /* FOOTER */
+  .footer {
+    margin-top: 64px; padding-top: 28px; border-top: 1px solid var(--border);
+    text-align: center; font-size: 13px; color: var(--text-muted);
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main-wrapper { margin-left: 0; }
+  }
+
+  @media (max-width: 600px) {
+    .page-wrapper { padding: 24px 16px 60px; }
+    .hero h1 { font-size: 26px; }
+    .card { padding: 20px; }
+  }
+
+  html { scroll-behavior: smooth; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-logo">
+    <span class="logo-badge">GBG</span>
+    <div class="header-divider"></div>
+    <span class="header-title">Android ↔ IVS Integration Guide</span>
+  </div>
+</header>
+
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <span class="sidebar-logo-badge">IVS</span>
+    <div class="sidebar-logo-text">
+      <span class="brand">GBG Identity Verification</span>
+      <span class="edition">Android Integration · v1.0</span>
+    </div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section-label">Overview</div>
+    <a class="nav-item active" href="#overview" onclick="setActive(this)">
+      <span class="nav-icon">📋</span> Overview
+    </a>
+    <a class="nav-item" href="#auth" onclick="setActive(this)">
+      <span class="nav-icon">🔐</span> Authentication
+    </a>
+
+    <div class="nav-section-label">API Steps</div>
+    <a class="nav-item" href="#step1" onclick="setActive(this)">
+      <span class="nav-icon">1️⃣</span> Create Session
+    </a>
+    <a class="nav-item" href="#step2" onclick="setActive(this)">
+      <span class="nav-icon">2️⃣</span> Capture Images
+    </a>
+    <a class="nav-item" href="#step3" onclick="setActive(this)">
+      <span class="nav-icon">3️⃣</span> Submit Images
+    </a>
+    <a class="nav-item" href="#step4" onclick="setActive(this)">
+      <span class="nav-icon">4️⃣</span> Poll for Status
+    </a>
+
+    <div class="nav-section-label">Reference</div>
+    <a class="nav-item" href="#errors" onclick="setActive(this)">
+      <span class="nav-icon">⚠️</span> Error Reference
+    </a>
+    <a class="nav-item" href="#sequence" onclick="setActive(this)">
+      <span class="nav-icon">🔄</span> Sequence Diagram
+    </a>
+    <a class="nav-item" href="#constraints" onclick="setActive(this)">
+      <span class="nav-icon">📌</span> Constraints
+    </a>
+    <a class="nav-item" href="#resources" onclick="setActive(this)">
+      <span class="nav-icon">🔗</span> Resources &amp; Access
+    </a>
+  </div>
+  <div class="sidebar-footer">
+    GBG Solutions Engineering<br>
+    Confidential · April 2026
+  </div>
+</nav>
+
+<div class="main-wrapper">
+<main class="page-wrapper">
+
+  <div class="hero">
+    <span class="hero-label">Confidential — Developer Reference</span>
+    <h1>Android ↔ IVS Integration Guide</h1>
+    <p>Everything you need to integrate a native Android application with GBG's Identity Verification Suite — authentication, API contract, error handling, and polling pattern.</p>
+  </div>
+
+  <!-- OVERVIEW -->
+  <section class="section" id="overview">
+    <div class="section-header">
+      <div class="section-icon">📋</div>
+      <h2>Overview</h2>
+    </div>
+
+    <div class="card">
+      <p>The <strong>GBG Identity Verification Suite (IVS)</strong> is the engine-agnostic command-and-control layer that sits between your Android app and the underlying document verification engines. Your app never calls verification engines directly — all communication goes through IVS.</p>
+      <p>This guide covers the complete four-step integration. Step 3 (Submit Images) uses a new endpoint built specifically for the Android integration — all other steps reuse existing IVS infrastructure.</p>
+    </div>
+
+    <table class="flow-table">
+      <thead>
+        <tr>
+          <th>Step</th>
+          <th>What Happens</th>
+          <th>Who Does It</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1 — Create Session</td>
+          <td>Initialize a verification session in IVS</td>
+          <td>App → IVS</td>
+          <td><span class="badge badge-reuse">Existing</span></td>
+        </tr>
+        <tr>
+          <td>2 — Capture Images</td>
+          <td>Capture document photos on-device</td>
+          <td>App + SDK only</td>
+          <td><span class="badge badge-sdk">SDK Only</span> &nbsp;<a href="https://smartcapture-docs.idscan.cloud/docs/android/intro/" target="_blank" style="font-size:12px; color:var(--gbg-accent);">Docs ↗</a></td>
+        </tr>
+        <tr>
+          <td>3 — Submit Images</td>
+          <td>Send captured images to IVS for processing</td>
+          <td>App → IVS</td>
+          <td><span class="badge badge-new">New Endpoint</span></td>
+        </tr>
+        <tr>
+          <td>4 — Poll for Status</td>
+          <td>Check verification status until complete</td>
+          <td>App → IVS</td>
+          <td><span class="badge badge-reuse">Existing</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="card">
+      <p><strong>Base URL:</strong></p>
+      <div class="code-block">https://ditto.gbg.com</div>
+      <p>All paths in this guide are relative to this base URL.</p>
+    </div>
+  </section>
+
+  <!-- AUTHENTICATION -->
+  <section class="section" id="auth">
+    <div class="section-header">
+      <div class="section-icon">🔐</div>
+      <h2>Authentication</h2>
+    </div>
+
+    <div class="card">
+      <p>All IVS API calls use <strong>API key authentication</strong>. You will be provided an API key for the Enterprise Rent-A-Car demo environment. Include it in every request header as follows:</p>
+      <div class="code-block">Authorization: Bearer &lt;your_ivs_api_key&gt;</div>
+      <p>Every request in Steps 1, 3, and 4 must include this header. There is no session token or Firebase auth — the API key is your sole credential for all calls.</p>
+    </div>
+
+    <div class="info-box">
+      <p><strong>Rate Limit: 30 requests per minute.</strong> Your API key is configured with a maximum of 30 requests per minute across all endpoints combined. This is well above what a normal verification flow requires — you will only approach this limit if running automated tests in rapid succession. If exceeded, IVS will return <code>429 Too Many Requests</code>. Back off and retry after a short delay.</p>
+    </div>
+
+    <div class="notice">
+      <div class="notice-title">⚠️ Security Requirement</div>
+      <p>Store the API key in <strong>Android Keystore</strong>. Do not hardcode it in source, commit it to version control, or store it in SharedPreferences. Treat it as you would any production secret.</p>
+    </div>
+  </section>
+
+  <!-- STEP 1 -->
+  <section class="section" id="step1">
+    <div class="section-header">
+      <div class="section-number">1</div>
+      <h2>Create Session</h2>
+    </div>
+
+    <div class="card">
+      <p>Initialize a verification session before capturing any images. The session ID returned here is your reference for all subsequent steps.</p>
+    </div>
+
+    <div class="endpoint-block">
+      <span class="endpoint-method method-post">POST</span>
+      <span class="endpoint-path">/api/verification/sessions</span>
+      <div class="endpoint-auth">Authorization: Bearer &lt;ivs_api_key&gt; &nbsp;|&nbsp; Content-Type: application/json</div>
+    </div>
+
+    <div class="code-label">Request Body</div>
+    <div class="code-block">{
+  <span class="json-key">"verificationType"</span>: <span class="json-str">"docAuth"</span>,
+  <span class="json-key">"returnUrl"</span>: <span class="json-str">"gbgdemo://result"</span>,
+  <span class="json-key">"faceMatchEnabled"</span>: <span class="json-bool">false</span>,
+  <span class="json-key">"sensorType"</span>: <span class="json-str">"Mobile"</span>,
+  <span class="json-key">"referenceId"</span>: <span class="json-str">"optional-your-reference"</span>
+}</div>
+
+    <table class="field-table">
+      <thead>
+        <tr><th>Field</th><th>Type</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>verificationType</td>
+          <td>string</td>
+          <td>Always <code>"docAuth"</code> for document authentication flows</td>
+        </tr>
+        <tr>
+          <td>sensorType</td>
+          <td>string</td>
+          <td><strong>Always hardcode <code>"Mobile"</code>.</strong> Do not make this configurable — it maps to the correct processing mode in the verification engine</td>
+        </tr>
+        <tr>
+          <td>faceMatchEnabled</td>
+          <td>boolean</td>
+          <td>Always hardcode <code>false</code>. Do not implement face match functionality at this time</td>
+        </tr>
+        <tr>
+          <td>returnUrl</td>
+          <td>string</td>
+          <td>Use <code>"gbgdemo://result"</code>. This is a web-only concept — include it but the app can discard the <code>verifyUrl</code> in the response</td>
+        </tr>
+        <tr>
+          <td>referenceId</td>
+          <td>string</td>
+          <td>Optional. Use for your own internal tracking if needed</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="code-label">Response — 201 Created</div>
+    <div class="code-block">{
+  <span class="json-key">"sessionId"</span>: <span class="json-str">"vs_abc123..."</span>,
+  <span class="json-key">"verifyUrl"</span>: <span class="json-str">"https://..."</span>, <span class="json-comment">// web-only — discard</span>
+  <span class="json-key">"expiresAt"</span>: <span class="json-str">"2026-04-16T14:30:00Z"</span>
+}</div>
+
+    <div class="info-box">
+      <p><strong>Store the <code>sessionId</code> only.</strong> The <code>verifyUrl</code> is a web-only concept and can be discarded. The <code>expiresAt</code> timestamp may be useful for proactive expiry detection (see below).</p>
+    </div>
+
+    <div class="notice">
+      <div class="notice-title">⚠️ Session Expiry — 30 Minutes</div>
+      <p>Sessions expire <strong>30 minutes after creation</strong>. If the user takes longer than 30 minutes between session creation and image submission — for example, if the app is backgrounded — the session will be expired and cannot accept images. When this happens, your app should <strong>silently create a new session</strong> and resume the flow from Step 1. Do not surface the internal expiry detail to the user; a "starting a fresh verification" message is sufficient.</p>
+    </div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="section" id="step2">
+    <div class="section-header">
+      <div class="section-number">2</div>
+      <h2>Capture Images</h2>
+    </div>
+
+    <div class="card">
+      <p>This step is entirely on-device. IVS is not involved.</p>
+      <p>Use the <strong>GBG Smart Capture Android SDK</strong> (provided separately as a <code>.aar</code> file) to capture front and back images of the identity document. The SDK handles camera configuration, lighting guidance, and image quality checks automatically. For this integration you will use the <strong>SmartCapture Document</strong> module, which provides auto-capture and user guidance for identity documents.</p>
+      <p>📖 <strong>SDK Documentation:</strong> <a href="https://smartcapture-docs.idscan.cloud/docs/android/intro/" target="_blank" style="color: var(--gbg-accent); font-weight: 500;">smartcapture-docs.idscan.cloud/docs/android/intro</a> — covers all available modules including Document Camera, Face Camera, and NFC Chip Authentication.</p>
+    </div>
+
+    <div class="notice">
+      <div class="notice-title">⚠️ Do Not Recompress Images</div>
+      <p>Use the SDK's image output directly. Do <strong>not</strong> recompress or transcode images after the SDK returns them. Recompression degrades quality in ways that can affect verification accuracy. Pass SDK output to Step 3 as-is.</p>
+    </div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="section" id="step3">
+    <div class="section-header">
+      <div class="section-number">3</div>
+      <h2>Submit Images</h2>
+    </div>
+
+    <div class="card">
+      <p>Send the captured images to IVS for processing. IVS returns <code>202 Accepted</code> immediately and processes the images asynchronously — proceed to polling after receiving the acknowledgement.</p>
+    </div>
+
+    <div class="notice">
+      <div class="notice-title">🚧 New Capability — Coming Shortly</div>
+      <p>This endpoint is a new capability being built specifically for this Android integration. It does not yet exist in the environment but will be available shortly. You will be notified when it is ready. In the meantime, you can proceed with Steps 1, 2, and 4 — Step 4 can be validated independently once a test session is provided alongside your API key.</p>
+    </div>
+
+    <div class="endpoint-block">
+      <span class="endpoint-method method-post">POST</span>
+      <span class="endpoint-path">/api/verification/sessions/{sessionId}/images</span>
+      <div class="endpoint-auth">Authorization: Bearer &lt;ivs_api_key&gt; &nbsp;|&nbsp; Content-Type: application/json</div>
+    </div>
+
+    <div class="code-label">Request Body</div>
+    <div class="code-block">{
+  <span class="json-key">"frontImage"</span>: <span class="json-str">"data:image/jpeg;base64,/9j/..."</span>,
+  <span class="json-key">"backImage"</span>: <span class="json-str">"data:image/jpeg;base64,/9j/..."</span>
+}</div>
+
+    <div class="info-box">
+      <p><strong>Image encoding:</strong> Base64-encoded with the data URI prefix (<code>data:image/jpeg;base64,</code>). Encode the SDK output directly — no additional processing. Both <code>frontImage</code> and <code>backImage</code> are required. Do not implement face match at this time.</p>
+    </div>
+
+    <div class="code-label">Response — 202 Accepted</div>
+    <div class="code-block">{
+  <span class="json-key">"sessionId"</span>: <span class="json-str">"vs_abc123..."</span>,
+  <span class="json-key">"status"</span>: <span class="json-str">"processing"</span>
+}</div>
+
+    <div class="notice">
+      <div class="notice-title">⚠️ Submit-Once Constraint</div>
+      <p>A session can only receive <strong>one image submission</strong>. A second submit to the same <code>sessionId</code> will return <code>409 Conflict</code>. If submission fails for network reasons, retry the same request — do not create a new session.</p>
+    </div>
+  </section>
+
+  <!-- STEP 4 -->
+  <section class="section" id="step4">
+    <div class="section-header">
+      <div class="section-number">4</div>
+      <h2>Poll for Status</h2>
+    </div>
+
+    <div class="card">
+      <p>Begin polling immediately after receiving the <code>202</code> from Step 3. Continue until you receive a terminal status or exhaust your retry budget.</p>
+    </div>
+
+    <div class="info-box">
+      <p><strong>🧪 Validating Step 4 independently:</strong> You don't need Step 3 to be complete to validate your polling implementation. Once your API key is issued, a completed test session ID will be provided that you can query directly. Use it to confirm your <code>GET</code> call, response parsing, and result display are all working correctly before the image submission capability is available.</p>
+    </div>
+
+    <div class="endpoint-block">
+      <span class="endpoint-method method-get">GET</span>
+      <span class="endpoint-path">/api/verification/sessions/{sessionId}</span>
+      <div class="endpoint-auth">Authorization: Bearer &lt;ivs_api_key&gt;</div>
+    </div>
+
+    <div class="code-label">Response — 200 OK</div>
+    <div class="code-block">{
+  <span class="json-key">"sessionId"</span>: <span class="json-str">"vs_abc123..."</span>,
+  <span class="json-key">"status"</span>: <span class="json-str">"pending | processing | completed | failed | error | timed_out"</span>,
+  <span class="json-key">"result"</span>: {
+    <span class="json-key">"ivsOverallResult"</span>: <span class="json-str">"pass | fail | warn | error"</span>,
+    <span class="json-key">"decision"</span>: <span class="json-str">"Pass | Fail | Attention"</span>,
+    <span class="json-key">"documentVerified"</span>: <span class="json-bool">true</span>,
+    <span class="json-key">"documentExpired"</span>: <span class="json-bool">false</span>,
+    <span class="json-key">"attentionNotices"</span>: [],
+    <span class="json-key">"failureReason"</span>: <span class="json-null">null</span>
+  },
+  <span class="json-key">"createdAt"</span>: <span class="json-str">"2026-04-16T14:00:00Z"</span>,
+  <span class="json-key">"completedAt"</span>: <span class="json-str">"2026-04-16T14:00:18Z"</span>
+}</div>
+
+    <div class="card">
+      <p><strong>Polling pattern:</strong> Poll every <strong>4 seconds</strong>, up to <strong>10 attempts</strong> (~40 seconds total). Stop polling as soon as <code>status</code> is one of: <code>completed</code>, <code>failed</code>, <code>error</code>, or <code>timed_out</code>.</p>
+    </div>
+
+    <div class="section-header" style="border-bottom: none; margin-bottom: 16px; margin-top: 8px;">
+      <div class="section-icon" style="font-size: 14px;">🔁</div>
+      <h2 style="font-size: 18px;">Timeout Handling</h2>
+    </div>
+
+    <div style="padding-left: 4px; margin-bottom: 24px;">
+      <div class="poll-pattern">
+        <div class="poll-connector"></div>
+        <div class="poll-dot">1</div>
+        <div class="poll-body">
+          <h3>Poll every 4 seconds</h3>
+          <p>Begin immediately after the 202 response from Step 3. Each attempt calls <code>GET /api/verification/sessions/{sessionId}</code>.</p>
+        </div>
+      </div>
+
+      <div class="poll-pattern">
+        <div class="poll-connector"></div>
+        <div class="poll-dot">2</div>
+        <div class="poll-body">
+          <h3>Stop on terminal status</h3>
+          <p>Stop polling immediately when <code>status</code> is <code>completed</code>, <code>failed</code>, <code>error</code>, or <code>timed_out</code>. Display the result to the user.</p>
+        </div>
+      </div>
+
+      <div class="poll-pattern">
+        <div class="poll-dot">3</div>
+        <div class="poll-body">
+          <h3>After 10 attempts — offer retry</h3>
+          <p>If 10 poll attempts complete without a terminal status, display a message: <em>"This is taking longer than expected."</em> Offer the user a <strong>Try Again</strong> action. This resets to a fresh 10-attempt cycle against the <strong>same <code>sessionId</code></strong> — do not create a new session. The verification is still processing server-side.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-header" style="border-bottom: none; margin-bottom: 16px; margin-top: 8px;">
+      <div class="section-icon" style="font-size: 14px;">📊</div>
+      <h2 style="font-size: 18px;">Status Reference</h2>
+    </div>
+
+    <table class="status-table">
+      <thead>
+        <tr><th>Status</th><th>Meaning</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>pending</td>
+          <td>Session created, awaiting image submission</td>
+          <td>Should not appear during polling</td>
+        </tr>
+        <tr>
+          <td>processing</td>
+          <td>Images received, verification in progress</td>
+          <td>Continue polling</td>
+        </tr>
+        <tr>
+          <td>completed</td>
+          <td>Verification finished — inspect <code>result</code></td>
+          <td>Stop polling, display result</td>
+        </tr>
+        <tr>
+          <td>failed</td>
+          <td>Verification failed (e.g. unreadable document)</td>
+          <td>Stop polling, show failure</td>
+        </tr>
+        <tr>
+          <td>error</td>
+          <td>Unexpected processing error</td>
+          <td>Stop polling, show error</td>
+        </tr>
+        <tr>
+          <td>timed_out</td>
+          <td>IVS processing timed out server-side</td>
+          <td>Stop polling, show error</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="section-header" style="border-bottom: none; margin-bottom: 16px; margin-top: 8px;">
+      <div class="section-icon" style="font-size: 14px;">✅</div>
+      <h2 style="font-size: 18px;">Result Interpretation</h2>
+    </div>
+
+    <table class="status-table">
+      <thead>
+        <tr><th>ivsOverallResult</th><th>decision</th><th>Meaning</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>pass</td>
+          <td>Pass</td>
+          <td>Document verified successfully</td>
+        </tr>
+        <tr>
+          <td>warn</td>
+          <td>Attention</td>
+          <td>Verified with notices — inspect <code>attentionNotices</code> for detail</td>
+        </tr>
+        <tr>
+          <td>fail</td>
+          <td>Fail</td>
+          <td>Verification failed — inspect <code>failureReason</code></td>
+        </tr>
+        <tr>
+          <td>error</td>
+          <td>—</td>
+          <td>Processing error — treat as a failed verification</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ERROR REFERENCE -->
+  <section class="section" id="errors">
+    <div class="section-header">
+      <div class="section-icon">⚠️</div>
+      <h2>Error Reference</h2>
+    </div>
+
+    <table class="error-table">
+      <thead>
+        <tr><th>HTTP Status</th><th>Scenario</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>400 Bad Request</td>
+          <td>Session expired</td>
+          <td>Session lifetime is 30 minutes. Create a new session and resume from Step 1</td>
+        </tr>
+        <tr>
+          <td>400 Bad Request</td>
+          <td>Session not in <code>pending</code> state</td>
+          <td>Session was already submitted or is in the wrong state for this operation</td>
+        </tr>
+        <tr>
+          <td>400 Bad Request</td>
+          <td>Missing required image fields</td>
+          <td>Ensure <code>frontImage</code> and <code>backImage</code> are always present</td>
+        </tr>
+        <tr>
+          <td>401 Unauthorized</td>
+          <td>Missing or invalid API key</td>
+          <td>Verify the <code>Authorization</code> header is present and correctly formatted: <code>Bearer &lt;key&gt;</code></td>
+        </tr>
+        <tr>
+          <td>404 Not Found</td>
+          <td>Session ID does not exist</td>
+          <td>Do not retry with the same ID — check your session creation logic</td>
+        </tr>
+        <tr>
+          <td>409 Conflict</td>
+          <td>Images already submitted to this session</td>
+          <td>Sessions are submit-once. If you need to retry after a network failure, re-submit the same request — do not create a new session. This 409 indicates the original submission succeeded</td>
+        </tr>
+        <tr>
+          <td>429 Too Many Requests</td>
+          <td>Rate limit exceeded</td>
+          <td>Your key allows 30 requests per minute. Back off and retry after a short delay — this will only occur during rapid automated testing</td>
+        </tr>
+        <tr>
+          <td>500 Internal Server Error</td>
+          <td>Unexpected server error</td>
+          <td>Retry once after a short delay. If persistent, escalate to the GBG team</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- SEQUENCE DIAGRAM -->
+  <section class="section" id="sequence">
+    <div class="section-header">
+      <div class="section-icon">🔄</div>
+      <h2>Complete Flow Sequence</h2>
+    </div>
+
+    <div class="sequence-diagram">
+      <pre><span class="seq-app">Android App</span>                    <span class="seq-ivs">IVS</span>                       <span class="seq-engine">AssureID</span>
+    |                              |                             |
+    |<span class="seq-comment">── Step 1: Create Session ─────────────────────────────────────────────</span>
+    |── POST /sessions ──────────▶ |                             |
+    |◀─ 201 { sessionId } ──────── |                             |
+    |                              |                             |
+    |<span class="seq-comment">── Step 2: Capture (on-device SDK, IVS not involved) ──────────────────</span>
+    |  [SDK captures images]       |                             |
+    |                              |                             |
+    |<span class="seq-comment">── Step 3: Submit Images ──────────────────────────────────────────────</span>
+    |── POST /sessions/{id}/images ▶ |                           |
+    |◀─ 202 { status: processing } ─ |                           |
+    |                              |── submit to AssureID ──────▶ |
+    |                              |                             |
+    |<span class="seq-comment">── Step 4: Poll for Status ────────────────────────────────────────────</span>
+    |── GET /sessions/{id} ───────▶ |                             |
+    |◀─ 200 { status: processing } ─ |  [verification running]   |
+    |                              |                             |
+    |── GET /sessions/{id} ───────▶ |                             |
+    |◀─ 200 { status: processing } ─ |                           |
+    |                              |◀── result ──────────────── |
+    |── GET /sessions/{id} ───────▶ |                             |
+    |◀─ 200 { status: completed,    |                             |
+    |         result: { ... } } ── |                             |
+    |                              |                             |</pre>
+    </div>
+  </section>
+
+  <!-- CONSTRAINTS -->
+  <section class="section" id="constraints">
+    <div class="section-header">
+      <div class="section-icon">📌</div>
+      <h2>Constraints Summary</h2>
+    </div>
+
+    <div class="card">
+      <ul class="constraints-list">
+        <li><strong><code>sensorType: "Mobile"</code> must be hardcoded</strong> in the session creation request — do not make this configurable</li>
+        <li><strong>Images must be base64-encoded</strong> with the data URI prefix: <code>data:image/jpeg;base64,...</code></li>
+        <li><strong>Do not recompress or transcode</strong> SDK image output — use it directly</li>
+        <li><strong>Both <code>frontImage</code> and <code>backImage</code> are required</strong> — do not implement face match at this time</li>
+        <li><strong>Sessions expire 30 minutes after creation</strong> — silently create a new session if this occurs; do not expose the error to the user</li>
+        <li><strong>Sessions are submit-once</strong> — a second image submission returns <code>409</code>; use this as a signal that the original submit succeeded</li>
+        <li><strong>API key must be stored in Android Keystore</strong> — not in source code or SharedPreferences</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- RESOURCES & ACCESS -->
+  <section class="section" id="resources">
+    <div class="section-header">
+      <div class="section-icon">🔗</div>
+      <h2>Resources &amp; Access</h2>
+    </div>
+
+    <div class="card">
+      <p><strong>GBG Smart Capture Android SDK Documentation</strong></p>
+      <p>The official SDK reference covers installation, module configuration, camera UI customization, and image output handling. Use the <strong>SmartCapture Document</strong> section as your primary reference for this integration.</p>
+      <p style="margin-top: 12px;">
+        <a href="https://smartcapture-docs.idscan.cloud/docs/android/intro/" target="_blank"
+          style="display:inline-flex; align-items:center; gap:8px; background:var(--gbg-blue-light); color:var(--gbg-accent); font-weight:600; font-size:14px; padding:10px 18px; border-radius:6px; text-decoration:none; border:1px solid var(--gbg-blue-mid);">
+          📖 SmartCapture Android SDK Docs ↗
+        </a>
+      </p>
+    </div>
+
+    <div class="card">
+      <p><strong>IVS Developer Portal — <code>ditto.gbg.com</code></strong></p>
+      <p>You will be given access to the IVS platform for the duration of this engagement. IVS is where you can manage your API key, view verification transaction logs, inspect raw results, and troubleshoot integration issues in real time.</p>
+      <p style="margin-top: 14px; color: var(--text-secondary); font-size: 14px;"><strong>What you'll find inside:</strong> Transaction history with full request/response detail, API key management, verification analytics, and sandbox testing tools.</p>
+    </div>
+
+    <div class="info-box">
+      <p><strong>💡 Verification Log — your primary testing feedback loop.</strong> Every transaction your app submits will appear in the <strong>Verification Log</strong> inside IVS. Each entry shows the full result, timing, decision detail, and raw engine response. Use this to confirm your sessions are being created and processed correctly — you won't need to rely solely on what the app displays during early development.</p>
+    </div>
+
+    <div class="info-box">
+      <p><strong>How to get access:</strong> Navigate to <strong>ditto.gbg.com</strong> and sign in using <strong>Sign in with Google</strong>. Use your Gmail account. Once you've attempted to sign in, send the GBG team a quick note with the Gmail address you used — we'll grant you access from our end. You won't be able to log in until we do, so reach out as soon as you've made the attempt.</p>
+    </div>
+
+    <div style="background:var(--code-bg); border-radius:10px; padding:20px 28px; display:flex; align-items:center; gap:20px; margin-bottom:20px;">
+      <div style="font-size:40px; flex-shrink:0;">🔐</div>
+      <div>
+        <div style="color:#93c5fd; font-weight:600; font-size:15px; margin-bottom:4px;">ditto.gbg.com</div>
+        <div style="color:rgba(255,255,255,0.55); font-size:13px; line-height:1.6;">Sign in with Google &nbsp;·&nbsp; Use your Gmail account &nbsp;·&nbsp; Notify GBG team after first attempt</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">
+    GBG Solutions Engineering &nbsp;·&nbsp; Android ↔ IVS Integration Guide v1.0 &nbsp;·&nbsp; Confidential<br>
+    For questions during integration, contact the GBG team.
+  </div>
+
+</main>
+</div>
+
+<script>
+  function setActive(el) {
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  // Highlight active section on scroll
+  const sections = document.querySelectorAll('section[id]');
+  const navItems = document.querySelectorAll('.nav-item[href]');
+
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 120) current = s.id;
+    });
+    navItems.forEach(item => {
+      item.classList.toggle('active', item.getAttribute('href') === '#' + current);
+    });
+  });
+</script>
+
+</body>
+</html>
