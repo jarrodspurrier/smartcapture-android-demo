@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,8 +26,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gbg.smartcapture.commons.compositions.GBGPreviewView
-import com.gbg.smartcapture.commons.compositions.components.PrimaryButton
 import com.gbg.smartcapture.commons.compositions.components.SecondaryButton
+import kotlinx.coroutines.delay
 
 private val BrandDeep = Color(0xFF0F2D4A)
 private val BrandMuted = Color(0xFF5B6B7C)
@@ -39,6 +40,10 @@ fun FlipDocumentView(
     onContinue: () -> Unit,
     onCancel: () -> Unit,
 ) {
+    LaunchedEffect(Unit) {
+        delay(2000)
+        onContinue()
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -84,12 +89,6 @@ fun FlipDocumentView(
 
         Spacer(Modifier.weight(1f))
 
-        PrimaryButton(
-            text = "Capture back",
-            onSubmit = onContinue,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Spacer(Modifier.size(8.dp))
         SecondaryButton(
             text = "Cancel",
             onSubmit = onCancel,
